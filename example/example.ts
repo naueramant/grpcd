@@ -1,31 +1,21 @@
 import { gRPC } from '../src/index';
 
-@gRPC.Service('example.proto')
-class ExampleService {
-    public msg = "Hello!";
+@gRPC.Service(__dirname + '/example.proto')
+class HelloService {
+    private counter = 1;
     
+    constructor(public msg = "Hello") {}
+
     @gRPC.RPC
     public hello(call, callback) {
-        console.log(this.msg);
+        callback(null, {
+            response: `${this.msg} ${call.request.name} ${this.counter++}`
+        });
     }
 }
 
+gRPC.add(new HelloService());
+
+console.log(gRPC.services);
+
 gRPC.start();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//const protoLoader = require('@grpc/proto-loader');
-//const packageDefinition = protoLoader.loadSync('example/example.proto');
-//console.log(packageDefinition);
