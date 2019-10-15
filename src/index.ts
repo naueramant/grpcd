@@ -30,21 +30,30 @@ export function Service(protoPath: string) {
     }
 }
 
-export function RPC(target, name, descriptor) {
-    const className = target.constructor.name;
+export function RPC(name?: string) {
 
-    if (!services.has(className)) {
-        services.set(className, {
-            methods: new Map()
-        });
+    return (target, key, descriptor) => {
+
+        const className = target.constructor.name;
+        
+        if (!services.has(className)) {
+            services.set(className, {
+                methods: new Map()
+            });
+        }
+        
+        services.get(className).methods.set(name || key, descriptor.value);
+        
+        return descriptor;
     }
-
-    services.get(className).methods.set(name, descriptor.value);
-
-    return descriptor;
 }
 
-export function add(serviceInstance: any) {
+export const server = {
+    start, 
+    add
+};
+
+function add(serviceInstance: any) {
     const name = serviceInstance.constructor.name;
 
     if (gRPCServer) {
@@ -58,7 +67,7 @@ export function add(serviceInstance: any) {
     instances.set(serviceInstance.constructor.name, serviceInstance);
 }
 
-export function start(host: string = "0.0.0.0", port: number = 50051) {
+function start(host: string = "0.0.0.0", port: number = 50051) {
     gRPCServer = new grpc.Server();
 
     const returnCode = gRPCServer.bind(
