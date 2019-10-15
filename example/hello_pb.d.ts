@@ -1,5 +1,5 @@
 // package: Proto.Hello
-// file: example/example.proto
+// file: example/hello.proto
 
 import * as jspb from "google-protobuf";
 
@@ -24,8 +24,8 @@ export namespace HelloParameters {
 }
 
 export class HelloResponse extends jspb.Message {
-  getReponse(): string;
-  setReponse(value: string): void;
+  getResponse(): string;
+  setResponse(value: string): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): HelloResponse.AsObject;
@@ -39,7 +39,39 @@ export class HelloResponse extends jspb.Message {
 
 export namespace HelloResponse {
   export type AsObject = {
-    reponse: string,
+    response: string,
+  }
+}
+
+export class ErrorParameters extends jspb.Message {
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ErrorParameters.AsObject;
+  static toObject(includeInstance: boolean, msg: ErrorParameters): ErrorParameters.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: ErrorParameters, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ErrorParameters;
+  static deserializeBinaryFromReader(message: ErrorParameters, reader: jspb.BinaryReader): ErrorParameters;
+}
+
+export namespace ErrorParameters {
+  export type AsObject = {
+  }
+}
+
+export class ErrorResponse extends jspb.Message {
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ErrorResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: ErrorResponse): ErrorResponse.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: ErrorResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ErrorResponse;
+  static deserializeBinaryFromReader(message: ErrorResponse, reader: jspb.BinaryReader): ErrorResponse;
+}
+
+export namespace ErrorResponse {
+  export type AsObject = {
   }
 }
 

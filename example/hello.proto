@@ -4,6 +4,7 @@ package Proto.Hello;
 
 service HelloService {
     rpc hello(HelloParameters) returns (HelloResponse) {}
+    rpc error(HelloParameters) returns (HelloResponse) {}
 }
 
 message HelloParameters {
@@ -12,4 +13,10 @@ message HelloParameters {
 
 message HelloResponse {
     string response = 1;
+}
+
+message ErrorParameters {
+}
+
+message ErrorResponse {
 }

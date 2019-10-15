@@ -1,89 +1,137 @@
 import * as grpc from 'grpc';
 import * as protoloader from '@grpc/proto-loader';
 
+import {
+    gRPCError
+} from './errors';
+
 type Service = {
-    name?: string,
-    protoPath?: string,
-    class?: any,
-    methods: Map<string, Function>
+    protoPath ? : string,
+    methods ? : Map < string, Function >
 }
 
-export module gRPC {
-    let server = null;
+let gRPCServer = null;
 
-    export const services: Map<string, Service> = new Map();
-    const instances: Map<string, any> = new Map();
+const services: Map < string, Service > = new Map();
+const instances: Map < string, any > = new Map();
 
-    export function Service(protoPath: string) {
-        return (constructor: Function) => {
-            const service = services.get(constructor.name);
-            service.protoPath = protoPath;
-            service.class = constructor;
-            service.name = constructor.name;
-        }
-    }
-    
-    export function RPC(target, name, descriptor) {
-        const className = target.constructor.name;
+export function Service(protoPath: string) {
+    return (constructor: Function) => {
+        const name = constructor.name;
 
-        if (!services.has(className)) {
-            services.set(className, {methods: new Map()})
+        if (!services.has(name)) {
+            services.set(name, {
+                methods: new Map()
+            });
         }
 
-        services.get(className).methods.set(name, descriptor.value);
+        const service = services.get(name);
+        service.protoPath = protoPath;
+    }
+}
 
-        return descriptor;
+export function RPC(target, name, descriptor) {
+    const className = target.constructor.name;
+
+    if (!services.has(className)) {
+        services.set(className, {
+            methods: new Map()
+        });
     }
 
-    export function start(host: string = "0.0.0.0", port: number = 50051) {
-        server = new grpc.Server();
+    services.get(className).methods.set(name, descriptor.value);
 
-        const returnCode = server.bind(
-            `${host}:${port}`, 
-            grpc.ServerCredentials.createInsecure()
-        );
+    return descriptor;
+}
 
-        if (returnCode === 0) {
-            throw Error(`Failed to bind GRPC server on ${host}:${port}`);
-        }
-    
-        addServices()
+export function add(serviceInstance: any) {
+    const name = serviceInstance.constructor.name;
 
-        server.start();
+    if (gRPCServer) {
+        throw Error(`Server already started, couldn't add service ${name}`);
     }
 
-    export function add(serviceInstance: any) {
-        if (server) {
-            throw Error("Server already started, couldn't add service " + serviceInstance.constructor.name);
-        }
-
-        instances.set(serviceInstance.constructor.name, serviceInstance);
+    if (instances.has(name)) {
+        throw Error(`Service ${name} already added`);
     }
 
-    function addServices() {
-        for (let s of services.values()) {
-            try {
-                const packageDefinition = protoloader.loadSync(s.protoPath);
-                const protoDescriptor: any = grpc.loadPackageDefinition(packageDefinition);
-            
-                const serviceProto: any = Object.values(protoDescriptor.Proto)[0];
-                
-                if (s.name in serviceProto) {
-                    const methods = {};
-                        
-                    for (let m of s.methods) {
-                        methods[m[0]] = ((call, callback) => {
-                            (async () => {
-                                await m[1].bind(instances.get(s.name))(call, callback);
-                            })();
-                        });
-                    }
-                    
-                    server.addService(serviceProto[s.name].service, methods);
+    instances.set(serviceInstance.constructor.name, serviceInstance);
+}
+
+export function start(host: string = "0.0.0.0", port: number = 50051) {
+    gRPCServer = new grpc.Server();
+
+    const returnCode = gRPCServer.bind(
+        `${host}:${port}`,
+        grpc.ServerCredentials.createInsecure()
+    );
+
+    if (returnCode === 0) {
+        throw Error(`Failed to bind GRPC server on ${host}:${port}`);
+    }
+
+    addServices()
+
+    gRPCServer.start();
+}
+
+function addServices() {
+    for (let [serviceName, data] of services) {
+        try {
+            const packageDefinition: any = protoloader.loadSync(data.protoPath);
+            const protoDescriptor: any = grpc.loadPackageDefinition(packageDefinition);
+            const serviceProto: any = getServiceProto(protoDescriptor, packageDefinition);
+
+            if (serviceName in serviceProto) {
+                const ctx = instances.get(serviceName);
+                const service = serviceProto[serviceName].service;
+
+                const methods = {};
+
+                for (let [methodName, func] of data.methods) {
+                    methods[methodName] = wrapMethod(func, ctx);
                 }
-            } catch(e) {
-                throw Error('Failed to initialize all service' + e.message);
+
+                gRPCServer.addService(service, methods);
             }
+        } catch (e) {
+            throw Error(`Failed to initialize all services ${e.message}`);
         }
     }
+}
+
+function wrapMethod(func, ctx) {
+    return ((call, callback) => {
+        (async () => {
+            try {
+                const res = await func.call(ctx, call.request);
+                callback(null, res);
+            } catch (e) {
+                if (e instanceof gRPCError) {
+                    callback({
+                        message: e.message,
+                        code: e.code
+                    }, null);
+                } else {
+                    throw e;
+                }
+            }
+        })();
+    });
+}
+
+function getServicePackagePath(protoDescriptor: any): string[] {
+    const keys = Object.keys(protoDescriptor);
+    const result = []
+
+    if (keys.length > 0) {
+        result.push(...keys[0].split('.').slice(0, -1))
+    }
+
+    return result;
+}
+
+function getServiceProto(protoDescriptor: any, packageDefinition: any): any {
+    const path = getServicePackagePath(packageDefinition);
+    return path.reduce((desc, k) => desc[k], protoDescriptor);
 }

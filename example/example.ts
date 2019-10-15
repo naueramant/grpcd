@@ -1,21 +1,43 @@
-import { gRPC } from '../src/index';
+import * as gRPC from '../src/index';
+import { HelloParameters, HelloResponse, ErrorResponse, ErrorParameters } from './hello_pb';
+import { GoodbyeParameters, GoodbyeResponse } from './goodbye_pb';
 
-@gRPC.Service(__dirname + '/example.proto')
+import { InternalError } from '../src/errors';
+
+@gRPC.Service(__dirname + '/hello.proto')
 class HelloService {
+
     private counter = 1;
     
-    constructor(public msg = "Hello") {}
+    @gRPC.RPC
+    public hello(params: HelloParameters.AsObject): HelloResponse.AsObject {
+        return {
+            response: `Hello ${params.name} number ${this.counter++}`
+        };
+    }
 
     @gRPC.RPC
-    public hello(call, callback) {
-        callback(null, {
-            response: `${this.msg} ${call.request.name} ${this.counter++}`
-        });
+    public error(params: ErrorParameters.AsObject): ErrorResponse.AsObject {
+        throw new InternalError("This is a very serious error!");
+    }
+}
+
+@gRPC.Service(__dirname + '/goodbye.proto')
+class GoodbyeService {
+    
+    @gRPC.RPC
+    public async goodbye(params: GoodbyeParameters.AsObject): Promise<GoodbyeResponse.AsObject> {
+        return {
+            response: await this.generateGoodbye(params.name)
+        };
+    }
+
+    private async generateGoodbye(name): Promise<string> {
+        return `Async goodbye ${name}`;
     }
 }
 
 gRPC.add(new HelloService());
+gRPC.add(new GoodbyeService());
 
-console.log(gRPC.services);
-
-gRPC.start();
+//gRPC.start();

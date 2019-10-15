@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package Proto.Goodbye;
+
+service GoodbyeService {
+    rpc goodbye(GoodbyeParameters) returns (GoodbyeResponse) {}
+}
+
+message GoodbyeParameters {
+    string name = 1;
+}
+
+message GoodbyeResponse {
+    string response = 1;
+}
