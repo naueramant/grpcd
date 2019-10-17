@@ -1,73 +1,33 @@
 import * as grpc from 'grpc';
 import * as protoloader from '@grpc/proto-loader';
+import * as deco from './decorators';
 
 import {
     gRPCError
 } from './errors';
-
-type Service = {
-    protoPath ? : string,
-    methods ? : Map < string, Function >
-}
+import { Health, ServingStatus } from './health/health';
 
 let gRPCServer = null;
 
-const services: Map < string, Service > = new Map();
-const instances: Map < string, any > = new Map();
+const healthInstance = new Health();
 
-export function Service(protoPath: string) {
-    return (constructor: Function) => {
-        const name = constructor.name;
-
-        if (!services.has(name)) {
-            services.set(name, {
-                methods: new Map()
-            });
-        }
-
-        const service = services.get(name);
-        service.protoPath = protoPath;
-    }
-}
-
-export function RPC(name?: string) {
-
-    return (target, key, descriptor) => {
-
-        const className = target.constructor.name;
-        
-        if (!services.has(className)) {
-            services.set(className, {
-                methods: new Map()
-            });
-        }
-        
-        services.get(className).methods.set(name || key, descriptor.value);
-        
-        return descriptor;
-    }
-}
-
-export const server = {
-    start, 
-    add
-};
-
-function add(serviceInstance: any) {
+function addService(serviceInstance: any) {
     const name = serviceInstance.constructor.name;
 
     if (gRPCServer) {
         throw Error(`Server already started, couldn't add service ${name}`);
     }
 
-    if (instances.has(name)) {
+    if (deco.instances.has(name)) {
         throw Error(`Service ${name} already added`);
     }
 
-    instances.set(serviceInstance.constructor.name, serviceInstance);
+    deco.instances.set(serviceInstance.constructor.name, serviceInstance);
 }
 
 function start(host: string = "0.0.0.0", port: number = 50051) {
+    addService(health);
+
     gRPCServer = new grpc.Server();
 
     const returnCode = gRPCServer.bind(
@@ -79,20 +39,27 @@ function start(host: string = "0.0.0.0", port: number = 50051) {
         throw Error(`Failed to bind GRPC server on ${host}:${port}`);
     }
 
-    addServices()
+    loadServices();
 
     gRPCServer.start();
 }
 
-function addServices() {
-    for (let [serviceName, data] of services) {
+function loadServices() {
+    for (let [serviceName, data] of deco.services) {
         try {
-            const packageDefinition: any = protoloader.loadSync(data.protoPath);
+            const packageDefinition: any = protoloader.loadSync(data.protoPath, {
+                keepCase: true,
+                longs: String,
+                enums: String,
+                defaults: true,
+                oneofs: true
+            });
+
             const protoDescriptor: any = grpc.loadPackageDefinition(packageDefinition);
             const serviceProto: any = getServiceProto(protoDescriptor, packageDefinition);
 
             if (serviceName in serviceProto) {
-                const ctx = instances.get(serviceName);
+                const ctx = deco.instances.get(serviceName);
                 const service = serviceProto[serviceName].service;
 
                 const methods = {};
@@ -113,7 +80,7 @@ function wrapMethod(func, ctx) {
     return ((call, callback) => {
         (async () => {
             try {
-                const res = await func.call(ctx, call.request);
+                const res = await func.call(ctx, call.request, call);
                 callback(null, res);
             } catch (e) {
                 if (e instanceof gRPCError) {
@@ -144,3 +111,17 @@ function getServiceProto(protoDescriptor: any, packageDefinition: any): any {
     const path = getServicePackagePath(packageDefinition);
     return path.reduce((desc, k) => desc[k], protoDescriptor);
 }
+
+export const server = {
+        start, 
+        addService
+};
+
+export const health = {
+    addService: healthInstance.addService.bind(healthInstance),
+    updateStatus: healthInstance.updateStatus.bind(healthInstance),
+    ServingStatus
+};
+
+export const Service = deco.Service;
+export const RPC = deco.RPC;
