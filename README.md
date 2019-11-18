@@ -1,6 +1,12 @@
-# gRPC decorators
+# gRPCd
 
-Making gRPC services easier in typescript.
+Making gRPC services easier to use in typescript.
+
+## Installation
+
+```bas
+yarn add grpcd 
+```
 
 ## Example
 
