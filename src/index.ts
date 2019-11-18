@@ -1,6 +1,7 @@
 import * as grpc from 'grpc';
 import * as protoloader from '@grpc/proto-loader';
 import * as deco from './decorators';
+import * as errors from './errors';
 
 import {
     gRPCError
@@ -114,3 +115,4 @@ export const server = {
 
 export const Service = deco.Service;
 export const RPC = deco.RPC;
+export const Errors = errors;

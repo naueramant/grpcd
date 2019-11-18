@@ -1,11 +1,11 @@
 {
   "name": "grpcd",
-  "version": "1.0.3",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "version": "1.0.4",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "license": "MIT",
   "scripts": {
-    "build": "rm -rf dist/; tsc; cp package.json dist/"
+    "build": "rm -rf dist/; tsc"
   },
   "dependencies": {
     "@grpc/proto-loader": "^0.5.2",

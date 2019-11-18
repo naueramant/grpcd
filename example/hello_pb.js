@@ -1,4 +1,4 @@
-// source: example/hello.proto
+// source: hello.proto
 /**
  * @fileoverview
  * @enhanceable

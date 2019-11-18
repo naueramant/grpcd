@@ -5,9 +5,7 @@ Making gRPC services easier in typescript.
 ## Example
 
 ```ts
-import { server, Service, RPC } from 'grpcd';
-import { NotFoundError } from 'grpcd/errors';
-
+import { server, Service, RPC, Errors } from 'grpcd';
 import { HelloParameters, HelloResponse, ErrorResponse, ErrorParameters } from './hello_pb';
 
 @Service(__dirname + '/hello.proto')
@@ -25,7 +23,7 @@ class HelloService {
     // Throw a grpc error
     @RPC()
     public error(params: ErrorParameters.AsObject): ErrorResponse.AsObject {
-        throw new NotFoundError("Greeting was not found!!");
+        throw new Errors.NotFoundError("Greeting was not found!!");
     }
 }
 
