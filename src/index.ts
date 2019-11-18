@@ -5,11 +5,8 @@ import * as deco from './decorators';
 import {
     gRPCError
 } from './errors';
-import { Health, ServingStatus } from './health/health';
 
 let gRPCServer = null;
-
-const healthInstance = new Health();
 
 function addService(serviceInstance: any) {
     const name = serviceInstance.constructor.name;
@@ -26,8 +23,6 @@ function addService(serviceInstance: any) {
 }
 
 function start(host: string = "0.0.0.0", port: number = 50051) {
-    addService(health);
-
     gRPCServer = new grpc.Server();
 
     const returnCode = gRPCServer.bind(
@@ -115,12 +110,6 @@ function getServiceProto(protoDescriptor: any, packageDefinition: any): any {
 export const server = {
         start, 
         addService
-};
-
-export const health = {
-    addService: healthInstance.addService.bind(healthInstance),
-    updateStatus: healthInstance.updateStatus.bind(healthInstance),
-    ServingStatus
 };
 
 export const Service = deco.Service;

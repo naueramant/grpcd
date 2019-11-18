@@ -1,9 +1,8 @@
-import { server, health, Service, RPC } from '../src/index';
+import { server, Service, RPC } from '../src/index';
 import { NotFoundError } from '../src/errors';
 
 import { HelloParameters, HelloResponse, ErrorResponse, ErrorParameters } from './hello_pb';
 import { GoodbyeParameters, GoodbyeResponse } from './goodbye_pb';
-import { Health } from '../src/health/health';
 
 @Service(__dirname + '/hello.proto')
 class HelloService {
@@ -40,23 +39,11 @@ class GoodbyeService {
     }
 }
 
-
-
 const inst1 = new HelloService();
 const inst2 = new GoodbyeService();
 
 server.addService(inst1);
 server.addService(inst2);
-
-/*
-health.addService("HelloService"); // Add either by instance or string
-health.addService(inst2);
-
-setTimeout(() => {
-    health.updateStatus(inst1, health.ServingStatus.SERVING);
-    health.updateStatus("GoodbyeService", health.ServingStatus.SERVING); // update either by instance or string
-}, 5000);
-*/
 
 server.start();
 
