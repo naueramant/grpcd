@@ -1,0 +1,11 @@
+syntax: v1
+builder: wiseflow/protobox:latest
+services:
+- proto: example/hello.proto
+  out:
+  - path: example/
+    language: ts
+- proto: example/goodbye.proto
+  out:
+  - path: example/
+    language: ts

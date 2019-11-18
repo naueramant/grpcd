@@ -37,3 +37,7 @@ server.start();
 - [x] Async calls
 - [x] Throwing errors
 - [ ] gRPC streaming
+
+## Protobox
+
+For easier source file and dependency management for gRPC checkout [protobox](https://github.com/uniwise/protobox).
