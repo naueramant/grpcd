@@ -4,6 +4,7 @@
           "es5",
           "es6"
        ],
+       "declaration": true,
        "target": "es6",
        "module": "commonjs",
        "moduleResolution": "node",
@@ -13,5 +14,11 @@
        "removeComments": true,
        "preserveConstEnums": true,
        "sourceMap": false
-    }
+    },
+    "include": [
+      "./src/**/*"
+   ],
+   "exclude": [
+      "./src/**/*.spec.ts"
+   ]
  }

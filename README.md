@@ -5,6 +5,10 @@ Making gRPC services easier in typescript.
 ## Example
 
 ```ts
+import { server, Service, RPC } from 'grpcd';
+import { NotFoundError } from 'grpcd/errors';
+
+import { HelloParameters, HelloResponse, ErrorResponse, ErrorParameters } from './hello_pb';
 
 @Service(__dirname + '/hello.proto')
 class HelloService {
