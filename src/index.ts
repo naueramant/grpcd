@@ -22,7 +22,7 @@ function addService(serviceInstance: any) {
     deco.instances.set(serviceInstance.constructor.name, serviceInstance);
 }
 
-function start(host: string = "0.0.0.0", port: number = 50051) {
+function start(port=50051, host="0.0.0.0") {
     gRPCServer = new grpc.Server();
 
     const returnCode = gRPCServer.bind(
