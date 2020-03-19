@@ -113,6 +113,7 @@ export const server = {
         addService
 };
 
+export const gRPC = grpc;
 export const Service = deco.Service;
 export const RPC = deco.RPC;
 export const Errors = errors;
